@@ -1,0 +1,7 @@
+BEGIN TRANSACTION;
+CREATE TABLE IF NOT EXISTS `records` (
+	`phone_number`	TEXT NOT NULL UNIQUE,
+	`carrier`	TEXT,
+	`score`	REAL
+);
+COMMIT;
