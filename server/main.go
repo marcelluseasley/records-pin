@@ -32,7 +32,7 @@ func main() {
 
 	router.Route("/v1/record", func(r chi.Router) {
 		r.Post("/create", createRecordHandler)
-		r.Post("/read", readRecordHandler)
+		r.Get("/read/{phoneNumber}", readRecordHandler)
 		r.Put("/update", updateRecordHandler)
 		r.Delete("/delete", deleteRecordHandler) //TODO: add authentication
 	})
