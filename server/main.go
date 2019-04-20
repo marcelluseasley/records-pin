@@ -35,7 +35,7 @@ func main() {
 	})
 
 	router.Route("/v1/records", func(r chi.Router) {
-		r.Post("/listall", listAllHandler)
+		r.Get("/listall", listAllHandler)
 		r.Delete("/deleteall", deleteAllHandler) //TODO: add authentication
 
 	})
@@ -43,5 +43,5 @@ func main() {
 	port := "8080"
 	log.Printf("Starting server on port %s", port)
 	http.ListenAndServe(fmt.Sprintf(":%s", port), router)
-	
+
 }
