@@ -33,7 +33,7 @@ func createRecordHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		log.Printf("Added record to database: %v", rec)
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status" : "record written successfully}`))
+		w.Write([]byte(`{"status" : "record written successfully"}`))
 	}
 
 }
@@ -42,22 +42,27 @@ func readRecordHandler(w http.ResponseWriter, r *http.Request) {
 	rec := Record{}
 	phoneNumber := chi.URLParam(r, "phoneNumber")
 
+	log.Printf("Processing phone number: %v", phoneNumber)
 	database, err := sql.Open("sqlite3", "pin_records.db")
 	if err != nil {
 		log.Printf("Error opening database. Cannot store created record: %v", err)
 	}
 
-	recordRow, err := database.Query(fmt.Sprintf(`
+	recordRow := database.QueryRow(fmt.Sprintf(`
 SELECT phone_number, carrier, score 
 FROM records
 WHERE phone_number = '%s';`, phoneNumber))
-	if err != nil {
-		log.Printf("Error querying the database: %v", err)
+
+	err = recordRow.Scan(&rec.PhoneNumber, &rec.Carrier, &rec.Score)
+	if err  == sql.ErrNoRows {
+		log.Printf("Phone number %v not found.", phoneNumber)
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"status" : "phone number not found"}`))
+	} else {
+		json.NewEncoder(w).Encode(rec)
 	}
-	for recordRow.Next() {
-		recordRow.Scan(&rec)
-	}
-	json.NewEncoder(w).Encode(rec)
+
+	
 }
 
 func updateRecordHandler(w http.ResponseWriter, r *http.Request) {
