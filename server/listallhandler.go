@@ -30,7 +30,6 @@ FROM records;`)
 			if err != nil {
 				log.Printf("Error getting row: %v", err)
 			}
-			log.Println(record)
 			records = append(records, record)
 		}
 		prettyJSON, err := json.MarshalIndent(records, "", "    ")
