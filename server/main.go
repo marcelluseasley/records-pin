@@ -31,12 +31,12 @@ func main() {
 		r.Post("/create", createRecordHandler)
 		r.Get("/read/{phoneNumber}", readRecordHandler)
 		r.Put("/update/{phoneNumber}", updateRecordHandler)
-		r.Delete("/delete", deleteRecordHandler) //TODO: add authentication
+		r.Delete("/delete/{phoneNumber}", deleteRecordHandler)
 	})
 
 	router.Route("/v1/records", func(r chi.Router) {
 		r.Get("/listall", listAllHandler)
-		r.Delete("/deleteall", deleteAllHandler) //TODO: add authentication
+		r.Delete("/deleteall", deleteAllHandler)
 
 	})
 
