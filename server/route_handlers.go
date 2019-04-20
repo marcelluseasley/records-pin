@@ -42,7 +42,7 @@ func readRecordHandler(w http.ResponseWriter, r *http.Request) {
 	rec := Record{}
 	phoneNumber := chi.URLParam(r, "phoneNumber")
 
-	log.Printf("Processing phone number: %v", phoneNumber)
+	log.Printf("Retrieving phone number: %v", phoneNumber)
 	database, err := sql.Open("sqlite3", "pin_records.db")
 	if err != nil {
 		log.Printf("Error opening database. Cannot store created record: %v", err)
@@ -54,7 +54,7 @@ FROM records
 WHERE phone_number = '%s';`, phoneNumber))
 
 	err = recordRow.Scan(&rec.PhoneNumber, &rec.Carrier, &rec.Score)
-	if err  == sql.ErrNoRows {
+	if err == sql.ErrNoRows {
 		log.Printf("Phone number %v not found.", phoneNumber)
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"status" : "phone number not found"}`))
@@ -62,11 +62,50 @@ WHERE phone_number = '%s';`, phoneNumber))
 		json.NewEncoder(w).Encode(rec)
 	}
 
-	
 }
 
 func updateRecordHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "update record")
+	if r.Header.Get("Content-Type") != "application/json" {
+		fmt.Fprintf(w, "this api call only accepts application/json requests")
+	}
+
+	rec := Record{}
+	
+	phoneNumber := chi.URLParam(r, "phoneNumber")
+
+	database, err := sql.Open("sqlite3", "pin_records.db")
+	if err != nil {
+		log.Printf("Error opening database. Cannot update record: %v", err)
+	}
+
+	recordRow := database.QueryRow(fmt.Sprintf(`
+SELECT phone_number, carrier, score 
+FROM records
+WHERE phone_number = '%s';`, phoneNumber))
+
+	// we don't really care about these values being put into the struct
+	// at this point. But Scan requires the same number of arguments
+	// as number of columns returned.
+	err = recordRow.Scan(&rec.PhoneNumber, &rec.Carrier, &rec.Score)
+	if err == sql.ErrNoRows {
+		log.Printf("Phone number %v not found.", phoneNumber)
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"status" : "phone number not found"}`))
+	} else {
+
+		statement, err := database.Prepare("UPDATE records SET phone_number=?, carrier=?, score=? WHERE phone_number=?;")
+		if err != nil {
+			log.Printf("Error preparing database: %v", err)
+		}
+		json.NewDecoder(r.Body).Decode(&rec)
+		_, err = statement.Exec(rec.PhoneNumber, rec.Carrier, rec.Score, rec.PhoneNumber)
+		if err != nil {
+			log.Printf("Error executing database statement: %v", err)
+		}
+
+		json.NewEncoder(w).Encode(rec)
+	}
+
 }
 
 func deleteRecordHandler(w http.ResponseWriter, r *http.Request) {
