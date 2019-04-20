@@ -1,15 +1,14 @@
 package main
 
 import (
-	
+	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 
-	
 	_ "github.com/mattn/go-sqlite3"
-
 )
 
 // Record represents call data that will be stored in the database
@@ -18,8 +17,6 @@ type Record struct {
 	Carrier     string  `json:"carrier"`
 	Score       float64 `json:"score"`
 }
-
-
 
 func main() {
 	createdatabase()
@@ -43,7 +40,8 @@ func main() {
 
 	})
 
-	http.ListenAndServe(":8080", router)
+	port := "8080"
+	log.Printf("Starting server on port %s", port)
+	http.ListenAndServe(fmt.Sprintf(":%s", port), router)
+	
 }
-
-
